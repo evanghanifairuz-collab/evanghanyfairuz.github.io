@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Cacing Kebun — Game Ular</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Luckiest+Guy&display=swap');
+
+  :root{
+    --soil-dark:#241708;
+    --soil:#3a2614;
+    --soil-light:#4d3420;
+    --moss:#5c7a4a;
+    --moss-light:#8bb56f;
+    --worm:#f0a340;
+    --worm-dark:#c97a1f;
+    --fruit:#e8543e;
+    --fruit-light:#ff8563;
+    --cream:#f4e9d8;
+    --cream-dim:#cbb99e;
+    --glow:#a4e06c;
+  }
+
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+
+  body{
+    margin:0;
+    min-height:100vh;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    background:
+      radial-gradient(ellipse at top, #3a2a15 0%, var(--soil-dark) 60%),
+      var(--soil-dark);
+    font-family:'Luckiest Guy', Impact, 'Arial Black', sans-serif;
+    color:var(--cream);
+    padding:16px;
+    overflow-x:hidden;
+  }
+
+  .wrap{
+    width:100%;
+    max-width:480px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:14px;
+  }
+
+  .title-row{
+    display:flex;
+    align-items:baseline;
+    justify-content:space-between;
+    width:100%;
+  }
+
+  h1{
+    font-family:'Luckiest Guy', Impact, 'Arial Black', sans-serif;
+    font-size:44px;
+    margin:0;
+    letter-spacing:1px;
+    color:var(--glow);
+    text-shadow:0 0 18px rgba(164,224,108,0.35);
+    line-height:1;
+  }
+  h1 span{color:var(--worm);}
+
+  .subtitle{
+    font-size:11px;
+    line-height:1.6;
+    color:var(--cream-dim);
+    margin-top:6px;
+  }
+
+  .hud{
+    width:100%;
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    background:linear-gradient(180deg, var(--soil-light), var(--soil));
+    border:2px solid #5c3d21;
+    border-radius:14px;
+    padding:10px 16px;
+    font-family:'JetBrains Mono', monospace;
+    box-shadow:inset 0 2px 4px rgba(0,0,0,0.4), 0 4px 10px rgba(0,0,0,0.35);
+  }
+
+  .hud .stat{display:flex; flex-direction:column; align-items:center;}
+  .hud .stat b{font-size:18px; color:var(--worm); font-weight:700;}
+  .hud .stat small{font-family:'Luckiest Guy', Impact, 'Arial Black', sans-serif; font-size:9px; color:var(--cream-dim); letter-spacing:0.5px; text-transform:uppercase; display:block; margin-top:6px;}
+
+  .board-frame{
+    position:relative;
+    padding:10px;
+    border-radius:20px;
+    background:linear-gradient(155deg, #573b21, #2c1c0e);
+    box-shadow:
+      0 0 0 2px #6b4728,
+      0 14px 30px rgba(0,0,0,0.55),
+      inset 0 0 20px rgba(0,0,0,0.4);
+  }
+
+  canvas{
+    display:block;
+    border-radius:12px;
+    background:#1c1508;
+    touch-action:none;
+  }
+
+  .overlay{
+    position:absolute;
+    inset:10px;
+    border-radius:12px;
+    background:rgba(20,13,5,0.88);
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:10px;
+    text-align:center;
+    padding:20px;
+    backdrop-filter:blur(2px);
+  }
+  .overlay.hidden{display:none;}
+  .overlay h2{
+    font-family:'Luckiest Guy', Impact, 'Arial Black', sans-serif;
+    margin:0;
+    font-size:34px;
+    color:var(--fruit-light);
+  }
+  .overlay p{margin:0; color:var(--cream-dim); font-size:12px; line-height:1.8; max-width:260px;}
+  .overlay .score-final{color:var(--glow); font-size:13px; font-family:'JetBrains Mono',monospace;}
+
+  button{
+    font-family:'Luckiest Guy', Impact, 'Arial Black', sans-serif;
+    font-size:15px;
+    border:none;
+    border-radius:12px;
+    padding:14px 24px;
+    line-height:1;
+    background:linear-gradient(180deg, var(--moss-light), var(--moss));
+    color:#122008;
+    cursor:pointer;
+    box-shadow:0 4px 0 #3d5230, 0 6px 12px rgba(0,0,0,0.4);
+    transition:transform 0.08s ease;
+  }
+  button:active{transform:translateY(3px); box-shadow:0 1px 0 #3d5230;}
+
+  .controls{
+    display:grid;
+    grid-template-columns:56px 56px 56px;
+    grid-template-rows:56px 56px 56px;
+    gap:6px;
+    margin-top:4px;
+  }
+  .controls button{
+    padding:0;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    font-size:20px;
+    background:linear-gradient(180deg, #6b4a29, #4a3119);
+    color:var(--cream);
+    box-shadow:0 4px 0 #2c1c0e, 0 6px 10px rgba(0,0,0,0.4);
+  }
+  .controls .up{grid-column:2; grid-row:1;}
+  .controls .left{grid-column:1; grid-row:2;}
+  .controls .down{grid-column:2; grid-row:2;}
+  .controls .right{grid-column:3; grid-row:2;}
+
+  .hint{
+    font-size:10px;
+    line-height:1.8;
+    color:var(--cream-dim);
+    text-align:center;
+    opacity:0.75;
+    padding:0 10px;
+  }
+
+  @media (min-width:520px){
+    .controls{display:none;}
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+  <div class="title-row">
+    <div>
+      <h1>🪱 Cacing <span>Kebun</span></h1>
+      <div class="subtitle">Makan buah, tumbuh panjang, jangan gigit badan sendiri!</div>
+    </div>
+  </div>
+
+  <div class="hud">
+    <div class="stat"><b id="score">0</b><small>Skor</small></div>
+    <div class="stat"><b id="best">0</b><small>Terbaik</small></div>
+    <div class="stat"><b id="speedTag">Santai</b><small>Kecepatan</small></div>
+  </div>
+
+  <div class="board-frame">
+    <canvas id="board" width="400" height="400"></canvas>
+
+    <div class="overlay" id="startOverlay">
+      <h2>Ayo Mulai! 🌱</h2>
+      <p>Pakai panah / WASD di keyboard, atau tombol di bawah pada layar sentuh.</p>
+      <button id="startBtn">Mulai Main</button>
+    </div>
+
+    <div class="overlay hidden" id="overOverlay">
+      <h2>Cacingnya Mati 💀</h2>
+      <p class="score-final" id="finalScoreText">Skor kamu: 0</p>
+      <button id="restartBtn">Main Lagi</button>
+    </div>
+  </div>
+
+  <div class="controls" id="touchControls">
+    <button class="up" data-dir="up">▲</button>
+    <button class="left" data-dir="left">◀</button>
+    <button class="down" data-dir="down">▼</button>
+    <button class="right" data-dir="right">▶</button>
+  </div>
+
+  <div class="hint">Tips: setiap 5 buah, cacing gerak makin cepat 🔥</div>
+</div>
+
+<script>
+(function(){
+  const canvas = document.getElementById('board');
+  const ctx = canvas.getContext('2d');
+  const GRID = 20;
+  const CELL = canvas.width / GRID;
+
+  const scoreEl = document.getElementById('score');
+  const bestEl = document.getElementById('best');
+  const speedTagEl = document.getElementById('speedTag');
+  const startOverlay = document.getElementById('startOverlay');
+  const overOverlay = document.getElementById('overOverlay');
+  const finalScoreText = document.getElementById('finalScoreText');
+  const startBtn = document.getElementById('startBtn');
+  const restartBtn = document.getElementById('restartBtn');
+  const touchControls = document.getElementById('touchControls');
+
+  let snake, dir, nextDir, food, score, best = 0, alive, loopId, baseSpeed, tickMs, growth;
+  let particles = [];
+  let animFrame = 0;
+
+  function resetGame(){
+    snake = [
+      {x:9,y:10},{x:8,y:10},{x:7,y:10}
+    ];
+    dir = {x:1,y:0};
+    nextDir = {x:1,y:0};
+    score = 0;
+    growth = 0;
+    baseSpeed = 130;
+    tickMs = baseSpeed;
+    alive = true;
+    particles = [];
+    placeFood();
+    updateHud();
+  }
+
+  function placeFood(){
+    let valid = false;
+    while(!valid){
+      food = { x: Math.floor(Math.random()*GRID), y: Math.floor(Math.random()*GRID) };
+      valid = !snake.some(s => s.x === food.x && s.y === food.y);
+    }
+    food.pulse = 0;
+  }
+
+  function updateHud(){
+    scoreEl.textContent = score;
+    bestEl.textContent = best;
+    if(tickMs > 105) speedTagEl.textContent = "Santai";
+    else if(tickMs > 80) speedTagEl.textContent = "Sedang";
+    else if(tickMs > 55) speedTagEl.textContent = "Ngebut";
+    else speedTagEl.textContent = "Gila!!";
+  }
+
+  function dirEquals(a,b){ return a.x===b.x && a.y===b.y; }
+  function isOpposite(a,b){ return a.x === -b.x && a.y === -b.y; }
+
+  function setDirection(nd){
+    if(!isOpposite(nd, dir)) nextDir = nd;
+  }
+
+  window.addEventListener('keydown', (e) => {
+    const k = e.key.toLowerCase();
+    if(['arrowup','w'].includes(k)) setDirection({x:0,y:-1});
+    else if(['arrowdown','s'].includes(k)) setDirection({x:0,y:1});
+    else if(['arrowleft','a'].includes(k)) setDirection({x:-1,y:0});
+    else if(['arrowright','d'].includes(k)) setDirection({x:1,y:0});
+    else if(k === ' ' && !alive) startGame();
+  });
+
+  touchControls.querySelectorAll('button').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const d = btn.dataset.dir;
+      if(d==='up') setDirection({x:0,y:-1});
+      if(d==='down') setDirection({x:0,y:1});
+      if(d==='left') setDirection({x:-1,y:0});
+      if(d==='right') setDirection({x:1,y:0});
+    });
+  });
+
+  // swipe support
+  let touchStart = null;
+  canvas.addEventListener('touchstart', e => {
+    touchStart = { x: e.touches[0].clientX, y: e.touches[0].clientY };
+  });
+  canvas.addEventListener('touchend', e => {
+    if(!touchStart) return;
+    const dx = e.changedTouches[0].clientX - touchStart.x;
+    const dy = e.changedTouches[0].clientY - touchStart.y;
+    if(Math.abs(dx) > Math.abs(dy)){
+      setDirection(dx > 0 ? {x:1,y:0} : {x:-1,y:0});
+    } else {
+      setDirection(dy > 0 ? {x:0,y:1} : {x:0,y:-1});
+    }
+    touchStart = null;
+  });
+
+  function step(){
+    if(!alive) return;
+    dir = nextDir;
+    const head = snake[0];
+    const newHead = { x: head.x + dir.x, y: head.y + dir.y };
+
+    // wall collision
+    if(newHead.x < 0 || newHead.x >= GRID || newHead.y < 0 || newHead.y >= GRID){
+      return gameOver();
+    }
+    // self collision
+    if(snake.some(s => s.x === newHead.x && s.y === newHead.y)){
+      return gameOver();
+    }
+
+    snake.unshift(newHead);
+
+    if(newHead.x === food.x && newHead.y === food.y){
+      score++;
+      spawnParticles(food.x, food.y);
+      placeFood();
+      if(score % 5 === 0 && tickMs > 50){
+        tickMs = Math.max(50, tickMs - 12);
+        restartLoop();
+      }
+      updateHud();
+    } else {
+      snake.pop();
+    }
+  }
+
+  function spawnParticles(gx, gy){
+    for(let i=0;i<10;i++){
+      particles.push({
+        x: gx*CELL + CELL/2,
+        y: gy*CELL + CELL/2,
+        vx: (Math.random()-0.5)*3.2,
+        vy: (Math.random()-0.5)*3.2,
+        life: 22,
+        maxLife: 22,
+        color: Math.random() > 0.5 ? '#a4e06c' : '#ff8563'
+      });
+    }
+  }
+
+  function drawBackground(){
+    // soil texture board
+    ctx.fillStyle = '#1c1508';
+    ctx.fillRect(0,0,canvas.width, canvas.height);
+
+    for(let y=0;y<GRID;y++){
+      for(let x=0;x<GRID;x++){
+        const even = (x+y) % 2 === 0;
+        ctx.fillStyle = even ? 'rgba(255,255,255,0.015)' : 'rgba(0,0,0,0.12)';
+        ctx.fillRect(x*CELL, y*CELL, CELL, CELL);
+      }
+    }
+    // subtle vignette
+    const grad = ctx.createRadialGradient(canvas.width/2,canvas.height/2,canvas.width*0.2,canvas.width/2,canvas.height/2,canvas.width*0.7);
+    grad.addColorStop(0,'rgba(0,0,0,0)');
+    grad.addColorStop(1,'rgba(0,0,0,0.35)');
+    ctx.fillStyle = grad;
+    ctx.fillRect(0,0,canvas.width,canvas.height);
+  }
+
+  function roundRect(x,y,w,h,r){
+    ctx.beginPath();
+    ctx.moveTo(x+r,y);
+    ctx.arcTo(x+w,y,x+w,y+h,r);
+    ctx.arcTo(x+w,y+h,x,y+h,r);
+    ctx.arcTo(x,y+h,x,y,r);
+    ctx.arcTo(x,y,x+w,y,r);
+    ctx.closePath();
+  }
+
+  function drawFood(){
+    const cx = food.x*CELL + CELL/2;
+    const cy = food.y*CELL + CELL/2;
+    food.pulse += 0.12;
+    const pulseScale = 1 + Math.sin(food.pulse)*0.08;
+    const r = (CELL*0.34) * pulseScale;
+
+    // glow
+    const glow = ctx.createRadialGradient(cx,cy,0,cx,cy,r*3.2);
+    glow.addColorStop(0,'rgba(232,84,62,0.35)');
+    glow.addColorStop(1,'rgba(232,84,62,0)');
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r*3.2,0,Math.PI*2);
+    ctx.fill();
+
+    // apple body
+    const bodyGrad = ctx.createRadialGradient(cx-r*0.3,cy-r*0.3,r*0.1,cx,cy,r);
+    bodyGrad.addColorStop(0,'#ff8563');
+    bodyGrad.addColorStop(1,'#c8402c');
+    ctx.fillStyle = bodyGrad;
+    ctx.beginPath();
+    ctx.arc(cx,cy,r,0,Math.PI*2);
+    ctx.fill();
+
+    // highlight
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath();
+    ctx.ellipse(cx-r*0.35, cy-r*0.35, r*0.22, r*0.13, -0.6, 0, Math.PI*2);
+    ctx.fill();
+
+    // stem
+    ctx.strokeStyle = '#6b4a29';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.moveTo(cx, cy-r);
+    ctx.quadraticCurveTo(cx+3, cy-r-6, cx+1, cy-r-10);
+    ctx.stroke();
+
+    // leaf
+    ctx.fillStyle = '#8bb56f';
+    ctx.beginPath();
+    ctx.ellipse(cx+5, cy-r-6, 5, 3, 0.6, 0, Math.PI*2);
+    ctx.fill();
+  }
+
+  function drawParticles(){
+    particles.forEach(p => {
+      p.x += p.vx; p.y += p.vy; p.life--;
+      const alpha = Math.max(0, p.life / p.maxLife);
+      ctx.fillStyle = p.color;
+      ctx.globalAlpha = alpha;
+      ctx.beginPath();
+      ctx.arc(p.x, p.y, 2.4, 0, Math.PI*2);
+      ctx.fill();
+      ctx.globalAlpha = 1;
+    });
+    particles = particles.filter(p => p.life > 0);
+  }
+
+  function drawWorm(){
+    // draw from tail to head so head overlaps
+    for(let i = snake.length - 1; i >= 0; i--){
+      const seg = snake[i];
+      const cx = seg.x*CELL + CELL/2;
+      const cy = seg.y*CELL + CELL/2;
+      const t = i / Math.max(1, snake.length-1);
+      const isHead = i === 0;
+      const radius = isHead ? CELL*0.46 : CELL*0.40 * (1 - t*0.15);
+
+      // body segment gradient (worm pinkish-orange, alternating banding)
+      const bandColor = i % 2 === 0 ? '#f0a340' : '#e08d2e';
+      const grad = ctx.createRadialGradient(cx-radius*0.3, cy-radius*0.3, radius*0.1, cx, cy, radius);
+      grad.addColorStop(0, isHead ? '#ffd08a' : '#f5b662');
+      grad.addColorStop(1, isHead ? '#e08d2e' : bandColor);
+
+      ctx.fillStyle = grad;
+      ctx.beginPath();
+      ctx.arc(cx, cy, radius, 0, Math.PI*2);
+      ctx.fill();
+
+      // segment outline
+      ctx.strokeStyle = 'rgba(120,70,20,0.4)';
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      if(isHead){
+        drawFace(cx, cy, radius);
+      }
+    }
+  }
+
+  function drawFace(cx, cy, radius){
+    const dx = dir.x, dy = dir.y;
+    // eyes offset perpendicular-ish to direction, placed toward front
+    const eyeForward = radius*0.35;
+    const eyeSide = radius*0.32;
+    const perpX = -dy, perpY = dx;
+
+    const e1x = cx + dx*eyeForward + perpX*eyeSide;
+    const e1y = cy + dy*eyeForward + perpY*eyeSide;
+    const e2x = cx + dx*eyeForward - perpX*eyeSide;
+    const e2y = cy + dy*eyeForward - perpY*eyeSide;
+
+    [ [e1x,e1y], [e2x,e2y] ].forEach(([ex,ey]) => {
+      ctx.fillStyle = '#241708';
+      ctx.beginPath();
+      ctx.arc(ex, ey, radius*0.16, 0, Math.PI*2);
+      ctx.fill();
+      ctx.fillStyle = '#fff';
+      ctx.beginPath();
+      ctx.arc(ex - dx*radius*0.05 + perpX*radius*0.02, ey - dy*radius*0.05 + perpY*radius*0.02, radius*0.05, 0, Math.PI*2);
+      ctx.fill();
+    });
+
+    // cute blush cheeks
+    ctx.fillStyle = 'rgba(232,84,62,0.35)';
+    ctx.beginPath();
+    ctx.arc(cx - dy*radius*0.5 - dx*radius*0.1, cy + dx*radius*0.5 - dy*radius*0.1, radius*0.14, 0, Math.PI*2);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.arc(cx + dy*radius*0.5 - dx*radius*0.1, cy - dx*radius*0.5 - dy*radius*0.1, radius*0.14, 0, Math.PI*2);
+    ctx.fill();
+
+    // little smile
+    ctx.strokeStyle = '#241708';
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    const smileCx = cx + dx*radius*0.55;
+    const smileCy = cy + dy*radius*0.55;
+    ctx.arc(smileCx, smileCy, radius*0.22, 0.15*Math.PI, 0.85*Math.PI);
+    ctx.stroke();
+  }
+
+  function render(){
+    drawBackground();
+    drawFood();
+    drawWorm();
+    drawParticles();
+  }
+
+  function gameLoop(){
+    step();
+    render();
+    if(!alive){
+      finishGame();
+    }
+  }
+
+  function restartLoop(){
+    clearInterval(loopId);
+    loopId = setInterval(gameLoop, tickMs);
+  }
+
+  function gameOver(){
+    alive = false;
+  }
+
+  function finishGame(){
+    clearInterval(loopId);
+    if(score > best){ best = score; }
+    updateHud();
+    finalScoreText.textContent = `Skor kamu: ${score}` + (score === best && score > 0 ? '  🏆 Rekor baru!' : '');
+    overOverlay.classList.remove('hidden');
+    // fade render once more for death visual
+    render();
+  }
+
+  function startGame(){
+    overOverlay.classList.add('hidden');
+    startOverlay.classList.add('hidden');
+    resetGame();
+    render();
+    restartLoop();
+  }
+
+  startBtn.addEventListener('click', startGame);
+  restartBtn.addEventListener('click', startGame);
+
+  // initial idle render behind start overlay
+  resetGame();
+  render();
+
+})();
+</script>
+</body>
+</html>
