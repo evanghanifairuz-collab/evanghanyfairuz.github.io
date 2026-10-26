@@ -1,174 +1,25 @@
 <!DOCTYPE html>
-<html lang="id">
+<html =lang"id>
+
 <head>
-<meta name="google-site-verification" content="mgzeMsGXafmqK4rWHaEiN7
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Evan Ghany Fairuz</title>
-<style>
-body{
-    margin:0;
-    background:#111827;
-    color:white;
-    font-family:Arial,sans-serif;
-}
-.card{
-    text-align:center;
-    max-width:500px;
-    padding:40px 20px 0 20px;
-    margin:0 auto;
-}
-h1{
-    font-size:45px;
-}
-p{
-    color:#cbd5e1;
-}
-button, a.btn{
-    display:inline-block;
-    margin-top:20px;
-    padding:12px 25px;
-    border:none;
-    border-radius:10px;
-    background:#2563eb;
-    color:white;
-    font-size:18px;
-    text-decoration:none;
-    cursor:pointer;
-}
-.jawaban{
-    display:block;
-    width:100%;
-    max-width:250px;
-    margin:10px auto;
-}
-#timer{
-    font-size:22px;
-    color:#f87171;
-    font-weight:bold;
-}
-#soalTeks{
-    font-size:32px;
-    margin:20px 0;
-}
-#halamanUtama, #halamanTentang, #halamanKetiga{
-    display:none;
-}
-#halamanUtama.active, #halamanTentang.active, #halamanKetiga.active{
-    display:block;
-}
-</style>
-</head>
+    <meta charset="UTF-8">
+    <meta name="viewport"
+content="width=device-width,
+initial-scale=1.0">
+    <tittle>TARGET WEBSITE</tittle>
+</head>    
 <body>
-
-<div id="halamanUtama" class="card active">
-<h1>Evan Ghany Fairuz</h1>
-<p>Selamat datang di website resmi saya.</p>
-<button onclick="gantiHalaman('tentang')">Tentang Saya 👋</button>
-</div>
-
-<div id="halamanTentang" class="card">
-<h1>Profil Diri</h1>
-<p>Saya Seorang Siswa Yang Sedang gabut membuat web seadanya Umur saya masih 15yo Mau lihat lebih detail tentang saya?</p>
-<button onclick="gantiHalaman('utama')">← Kembali</button>
-<br>
-<button onclick="gantiHalaman('ketiga')">Lanjut Tentang Saya</button>
-</div>
-
-<div id="halamanKetiga" class="card">
-
-<div id="bagianSoal">
-<h1>Soal Matematika</h1>
-<p id="timer">Waktu: 15 detik</p>
-<p id="soalTeks">... x ...</p>
-<button class="jawaban" id="opsiA" onclick="cekJawaban(this)"></button>
-<button class="jawaban" id="opsiB" onclick="cekJawaban(this)"></button>
-<button class="jawaban" id="opsiC" onclick="cekJawaban(this)"></button>
-</div>
-
-<div id="bagianProfil" style="display:none;">
-<h1>Selamat! 🎉</h1>
-<img src="IMG_20260710_221712.jpg" style="width:150px; height:150px; object-fit:cover; border-radius:50%; margin-top:20px;">
-<p><b>Nama:</b> Evan Ghany Fairuz</p>
-<p><b>Umur:</b> 15yo</p>
-<p><b>Sekolah:</b> SMKN 1 BANJAR</p>
-<p><b>Hobi:</b> gatau seterah gw</p>
-<p><b>Kata-kata:</b> dingin</p>
-<button onclick="gantiHalaman('utama')">← Kembali ke Awal</button>
-<a href="game-cacing.html" class="btn">🎮 Main Game</a>
-</div>
-
-</div>
-
-<script>
-var waktuTersisa = 15;
-var timerInterval;
-var jawabanBenar;
-
-function gantiHalaman(tujuan) {
-    document.getElementById("halamanUtama").classList.remove("active");
-    document.getElementById("halamanTentang").classList.remove("active");
-    document.getElementById("halamanKetiga").classList.remove("active");
-
-    clearInterval(timerInterval);
-
-    if (tujuan === "tentang") {
-        document.getElementById("halamanTentang").classList.add("active");
-    } else if (tujuan === "ketiga") {
-        document.getElementById("bagianSoal").style.display = "block";
-        document.getElementById("bagianProfil").style.display = "none";
-        document.getElementById("halamanKetiga").classList.add("active");
-        mulaiSoal();
-    } else {
-        document.getElementById("halamanUtama").classList.add("active");
-    }
-}
-
-function mulaiSoal() {
-    var a = Math.floor(Math.random() * (99 - 11 + 1)) + 11;
-var b = Math.floor(Math.random() * (99 - 11 + 1)) + 11;
-    jawabanBenar = a * b;
-
-    document.getElementById("soalTeks").innerText = a + " x " + b + " = ?";
-
-    var pilihan = [jawabanBenar];
-    while (pilihan.length < 3) {
-        var salah = jawabanBenar + (Math.floor(Math.random() * 10) - 5);
-        if (salah !== jawabanBenar && salah >= 0 && pilihan.indexOf(salah) === -1) {
-            pilihan.push(salah);
-        }
-    }
-
-    pilihan.sort(function(){ return Math.random() - 0.5; });
-
-    document.getElementById("opsiA").innerText = pilihan[0];
-    document.getElementById("opsiB").innerText = pilihan[1];
-    document.getElementById("opsiC").innerText = pilihan[2];
-
-    waktuTersisa = 15;
-    document.getElementById("timer").innerText = "Waktu: " + waktuTersisa + " detik";
-
-    timerInterval = setInterval(function() {
-        waktuTersisa--;
-        document.getElementById("timer").innerText = "Waktu: " + waktuTersisa + " detik";
-        if (waktuTersisa <= 0) {
-            clearInterval(timerInterval);
-            gantiHalaman('utama');
-        }
-    }, 1000);
-}
-
-function cekJawaban(tombol) {
-    clearInterval(timerInterval);
-    var jawabanUser = parseInt(tombol.innerText);
-    if (jawabanUser === jawabanBenar) {
-        document.getElementById("bagianSoal").style.display = "none";
-        document.getElementById("bagianProfil").style.display = "block";
-    } else {
-        gantiHalaman('utama');
-    }
-}
-</script>
-
+    
+    <h1>BELAJAR CODING</h1>
+    <p>selamat datang di artikel pertama saya</p>
+    <br>
+    <h2><b>APA ITU HTML?</b></h2>
+    <p>HTML adalah bahasa markup untuk membuat
+    <b>struktur website</b></p>
+    <p>saya sedang <i>belajar html</i> dari nol</p>
+    <p><u>Target saya menjadi programmer</u></p>
+    <p><s>saya tidak bisa coding</s></p>
+    <p>Rumus favorit saya adalah E=mc<sup>2</sup></p>
+    
 </body>
 </html>
